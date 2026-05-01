@@ -1,4 +1,4 @@
-package src
+package model
 
 type State struct {
   X, Y int
