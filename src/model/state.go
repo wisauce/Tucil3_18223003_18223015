@@ -41,20 +41,6 @@ func (s State) Move(dir Direction, board [][]byte, costs [][]int) (State, bool) 
 		}
 	}
 
-
-  if board[y][x] == 'X' {
-    switch dir {
-		case UP:
-			y++
-		case DOWN:
-			y--
-		case RIGHT:
-			x--
-		case LEFT:
-			x++
-		}
-  }
-
 	return State{
 		X:          x,
 		Y:          y,
