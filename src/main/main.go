@@ -11,6 +11,11 @@ func main() {
 	fmt.Scan(&filename)
 	state, solver := utils.ParseFile(filename)
 
-	final := solver.UCS(state)
-	solver.VisualizeRoute(final)
+	final, solved := solver.UCS(state)
+	if !solved {
+		fmt.Println("Tidak ada solusi yang ditemukan.")
+		return
+	} else {
+		solver.VisualizeRoute(final)
+	}
 }

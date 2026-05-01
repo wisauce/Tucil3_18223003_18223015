@@ -12,7 +12,7 @@ type Solver struct {
 	FinalNumber  int
 }
 
-func (s Solver) UCS(st State) State {
+func (s Solver) UCS(st State) (State, bool) {
 	open := &PriorityQueue{}
 	heap.Init(open)
 
@@ -27,7 +27,7 @@ func (s Solver) UCS(st State) State {
 		item := heap.Pop(open).(*Item)
 		cur := item.State
 
-		key := StateKey{cur.X, cur.Y, cur.NextNumber}
+		key := cur.Key()
 
 		if oldCost, ok := close[key]; ok && oldCost <= cur.Cost {
 			continue
@@ -36,19 +36,13 @@ func (s Solver) UCS(st State) State {
 		close[key] = cur.Cost
 
 		if s.isSolved(*cur) {
-			return *cur
+			return *cur, true
 		}
 
 		nextStates := s.generateNextmoves(*cur)
 
 		for i := range nextStates {
 			ns := nextStates[i]
-
-			nextKey := StateKey{ns.X, ns.Y, ns.NextNumber}
-
-			if oldCost, ok := close[nextKey]; ok && oldCost <= ns.Cost {
-				continue
-			}
 
 			heap.Push(open, &Item{
 				State:    &ns,
@@ -57,7 +51,7 @@ func (s Solver) UCS(st State) State {
 		}
 	}
 
-	return State{}
+	return State{}, false
 }
 
 func (s Solver) isSolved(st State) bool {
@@ -74,52 +68,44 @@ func (s Solver) generateNextmoves(st State) []State {
 	}
 	return moves
 }
-
 func (s Solver) move(dir Direction, st State) (State, bool) {
-	x, y := st.X, st.Y
-	nextNumber := st.NextNumber
-	cost := st.Cost
-	for {
-		cost += s.Costs[y][x]
+    x, y := st.X, st.Y
+    nextNumber := st.NextNumber
+    cost := st.Cost
 
-		nx, ny := x, y
-		switch dir {
-		case UP:
-			ny--
-		case DOWN:
-			ny++
-		case LEFT:
-			nx--
-		case RIGHT:
-			nx++
-		}
-		if ny < 0 || nx < 0 || ny >= len(s.Board) || nx >= len(s.Board[0]) || s.Board[ny][nx] == 'L' {
-			return State{}, false
-		}
-		if s.Board[ny][nx] == 'X' {
-			break
-		}
+    for {
+        nx, ny := x, y
+        switch dir {
+			case UP:    ny--
+			case DOWN:  ny++
+			case LEFT:  nx--
+			case RIGHT: nx++
+        }
 
-		x, y = nx, ny
-		if s.Board[y][x] >= '0' && s.Board[y][x] <= '9' {
-			if s.Board[y][x] == byte(nextNumber+'0') {
-				nextNumber++
-			} else {
-				return State{}, false
-			}
-		}
-	}
-	if st.X == x && st.Y == y {
-		return State{}, false
-	}
+        if ny < 0 || nx < 0 || ny >= len(s.Board) || nx >= len(s.Board[0]) || s.Board[ny][nx] == 'L' {
+            return State{}, false
+        }
+        if s.Board[ny][nx] == 'X' {
+            break
+        }
 
-	return State{
-		X:          x,
-		Y:          y,
-		NextNumber: nextNumber,
-		Cost:       cost,
-		Parent:     &st,
-	}, true
+        x, y = nx, ny
+        cost += s.Costs[y][x]  // ← add cost of tile we just landed on
+
+        if s.Board[y][x] >= '0' && s.Board[y][x] <= '9' {
+        	if s.Board[y][x] == byte(nextNumber+'0') {
+                nextNumber++
+            } else {
+                return State{}, false
+            }
+        }
+    }
+
+    if st.X == x && st.Y == y {
+        return State{}, false
+    }
+
+    return State{X: x, Y: y, NextNumber: nextNumber, Cost: cost, Parent: &st}, true
 }
 
 func (s Solver) VisualizeState(st State) {
@@ -156,16 +142,18 @@ func (s Solver) VisualizeRoute(st State) {
 			dx := current.X - current.Parent.X
 			dy := current.Y - current.Parent.Y
 
-			var dir rune
-			if dx > 0 {
-				dir = 'R'
-			} else if dx < 0 {
-				dir = 'L'
-			} else if dy < 0 {
-				dir = 'U'
-			} else if dy > 0 {
-				dir = 'D'
-			}
+		var dir rune
+		if dx > 0 {
+			dir = 'R'
+		} else if dx < 0 {
+			dir = 'L'
+		} else if dy < 0 {
+			dir = 'U'
+		} else if dy > 0 {
+			dir = 'D'
+		} else {
+			dir = '?'
+		}
 			moves = append(moves, dir)
 		}
 		current = current.Parent
