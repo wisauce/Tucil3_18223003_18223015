@@ -10,7 +10,7 @@ func main() {
 	var filename string
 	fmt.Scan(&filename)
 	state, solver := utils.ParseFile(filename)
-	// fmt.Print(state)
+
 	final := solver.UCS(state)
-	fmt.Print(final)
+	solver.VisualizeRoute(final)
 }

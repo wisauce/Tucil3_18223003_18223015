@@ -45,14 +45,16 @@ func ParseFile(filename string) (model.State, model.Solver) {
 			} else if c != '*' && c != 'X' && c != 'L' && c != 'Z' && c != 'O' {
 				panic(fmt.Sprintf("%c is not a valid tile", c))
 			}
-			if c == 'Z' {
+			switch c {
+			case 'Z':
 				initial.X = j
 				initial.Y = i
 				board[i][j] = '*'
-			} else if c == 'O' {
+			case 'O':
 				solver.GoalX = j
 				solver.GoalY = i
-			} else {
+				board[i][j] = 'O'
+			default:
 				board[i][j] = c
 			}
 		}
@@ -69,6 +71,7 @@ func ParseFile(filename string) (model.State, model.Solver) {
 					panic("given <i> is not sequencial")
 				}
 				changed = true
+				solver.FinalNumber = i-1
 			} else if changed {
 				panic("given <i> is not sequencial")
 			}
