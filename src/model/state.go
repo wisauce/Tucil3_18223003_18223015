@@ -1,32 +1,38 @@
 package model
 
-import "fmt"
+// import "fmt"
 
 type State struct {
 	X, Y       int
-	NextNumber int // angka berikutnya yang harus dilewati
-	Cost       int // g(n)
+	NextNumber int
+	Cost       int
 }
 
-func (s State) Move(direction Direction, board [][]byte, costs [][]int) (State, bool) {
+func (s State) Move(dir Direction, board [][]byte, costs [][]int) (State, bool) {
 	x, y := s.X, s.Y
 	nextNumber := s.NextNumber
 	cost := 0
 	for {
-		switch direction {
-		case UP:
-			y--
-		case DOWN:
-			y++
-		case RIGHT:
-			x++
-		case LEFT:
-			x--
+    nx, ny := x, y
+    switch dir {
+    case UP:
+        ny--
+    case DOWN:
+        ny++
+    case LEFT:
+        nx--
+    case RIGHT:
+        nx++
+    }
+		if ny < 0 || nx < 0 || ny >= len(board) || nx >= len(board[0]) || board[ny][nx] == 'L' {
+			return State{}, false
 		}
-		if y <= 0 || x <= -1 || y >= len(board) || x >= len(board[y]) || board[y][x] == 'L' || board[y][x] == 'O' || board[y][x] == 'X' {
-			break
-		}
-		fmt.Println(x, y)
+
+    if board[ny][nx] == 'X' {
+      break
+    }
+
+    x, y = nx, ny
 
 		cost += costs[y][x]
     if board[y][x] == byte(nextNumber+'0') {
@@ -34,12 +40,10 @@ func (s State) Move(direction Direction, board [][]byte, costs [][]int) (State, 
 			board[y][x] = '*'
 		}
 	}
-	if y >= len(board) || x >= len(board[y]) || board[y][x] == 'L' {
-		return State{}, false
-	}
+
 
   if board[y][x] == 'X' {
-    switch direction {
+    switch dir {
 		case UP:
 			y++
 		case DOWN:
