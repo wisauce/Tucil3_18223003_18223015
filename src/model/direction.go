@@ -5,6 +5,6 @@ type Direction int
 const (
   UP Direction = iota
   DOWN
-  LEFT
   RIGHT
+  LEFT
 )

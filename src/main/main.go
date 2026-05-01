@@ -1,7 +1,6 @@
 package main
 
 import (
-	"IceSlidingPuzzle/model"
 	"IceSlidingPuzzle/utils"
 	"fmt"
 )
@@ -11,9 +10,7 @@ func main() {
 	var filename string
 	fmt.Scan(&filename)
 	state, solver := utils.ParseFile(filename)
-	fmt.Print(state)
-	newstate, canMove := solver.Move(model.UP, state)
-	if canMove {
-		fmt.Print(newstate)
-	}
+	// fmt.Print(state)
+	final := solver.UCS(state)
+	fmt.Print(final)
 }
