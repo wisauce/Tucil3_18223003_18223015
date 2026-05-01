@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func ParseFile(filename string) ([][]byte, [][]int, model.State) {
+func ParseFile(filename string) ( model.State, [][]byte, [][]int) {
 	file, err := os.Open(("../test/" + filename))
 	if err != nil {
 		panic(err)
@@ -85,5 +85,5 @@ func ParseFile(filename string) ([][]byte, [][]int, model.State) {
 			cost[i][j] = integer
 		}
 	}
-	return board, cost, initial
+	return initial, board, cost
 }
