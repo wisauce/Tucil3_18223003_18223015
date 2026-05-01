@@ -10,15 +10,9 @@ func main() {
 	fmt.Println("Masukkan nama file papan permainan (.txt)")
 	var filename string
 	fmt.Scan(&filename)
-	state, board, costs := utils.ParseFile(filename)
-	for i := range board {
-		fmt.Println(string(board[i]))
-	}
-	for i := range costs {
-		fmt.Println(costs[i])
-	}
+	state, solver := utils.ParseFile(filename)
 	fmt.Print(state)
-	newstate, canMove := state.Move(model.UP, board, costs)
+	newstate, canMove := solver.Move(model.UP, state)
 	if canMove {
 		fmt.Print(newstate)
 	}

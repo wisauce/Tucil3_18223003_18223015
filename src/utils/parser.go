@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func ParseFile(filename string) ( model.State, [][]byte, [][]int) {
+func ParseFile(filename string) (model.State, model.Solver) {
 	file, err := os.Open(("../test/" + filename))
 	if err != nil {
 		panic(err)
@@ -24,6 +24,7 @@ func ParseFile(filename string) ( model.State, [][]byte, [][]int) {
 	m, _ := strconv.Atoi(nm[1])
 
 	var initial model.State
+	var solver model.Solver
 
 	board := make([][]byte, n)
 	numberSequence := [10]bool{}
@@ -48,6 +49,9 @@ func ParseFile(filename string) ( model.State, [][]byte, [][]int) {
 				initial.X = j
 				initial.Y = i
 				board[i][j] = '*'
+			} else if c == 'O' {
+				solver.GoalX = j
+				solver.GoalY = i
 			} else {
 				board[i][j] = c
 			}
@@ -72,18 +76,20 @@ func ParseFile(filename string) ( model.State, [][]byte, [][]int) {
 		prevNumber = numberSequence[i]
 	}
 
-	cost := make([][]int, n)
+	costs := make([][]int, n)
 	for i := range n {
 		scanner.Scan()
 		fields := strings.Fields(scanner.Text())
 		if len(fields) != m {
-			panic("invalid cost input width")
+			panic("invalid costs input width")
 		}
-		cost[i] = make([]int, m)
+		costs[i] = make([]int, m)
 		for j := range m {
 			integer, _ := strconv.Atoi(fields[j])
-			cost[i][j] = integer
+			costs[i][j] = integer
 		}
 	}
-	return initial, board, cost
+	solver.Board = board
+	solver.Costs = costs
+	return initial, solver
 }
