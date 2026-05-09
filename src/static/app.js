@@ -99,7 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Terjadi kesalahan koneksi ke server.');
             console.error(err);
         } finally {
-            btnText.textContent = '🚀 Solve Puzzle';
+            btnText.textContent = 'Solve Puzzle';
             solveBtn.disabled = false;
         }
     });
