@@ -1,8 +1,7 @@
 package model
 
 import (
-	"container/heap"
-	"fmt"
+	"strings"
 )
 
 type Solver struct {
@@ -12,47 +11,7 @@ type Solver struct {
 	FinalNumber  int
 }
 
-func (s Solver) UCS(st State) (State, bool) {
-	open := &PriorityQueue{}
-	heap.Init(open)
 
-	heap.Push(open, &Item{
-		State:    &st,
-		Priority: st.Cost,
-	})
-
-	close := make(map[StateKey]int)
-
-	for open.Len() > 0 {
-		item := heap.Pop(open).(*Item)
-		cur := item.State
-
-		key := cur.Key()
-
-		if oldCost, ok := close[key]; ok && oldCost <= cur.Cost {
-			continue
-		}
-
-		close[key] = cur.Cost
-
-		if s.isSolved(*cur) {
-			return *cur, true
-		}
-
-		nextStates := s.generateNextmoves(*cur)
-
-		for i := range nextStates {
-			ns := nextStates[i]
-
-			heap.Push(open, &Item{
-				State:    &ns,
-				Priority: ns.Cost,
-			})
-		}
-	}
-
-	return State{}, false
-}
 
 func (s Solver) isSolved(st State) bool {
 	return st.X == s.GoalX && st.Y == s.GoalY && st.NextNumber == s.FinalNumber+1
@@ -93,9 +52,10 @@ func (s Solver) move(dir Direction, st State) (State, bool) {
         cost += s.Costs[y][x]  // ← add cost of tile we just landed on
 
         if s.Board[y][x] >= '0' && s.Board[y][x] <= '9' {
-        	if s.Board[y][x] == byte(nextNumber+'0') {
+            currentNum := int(s.Board[y][x] - '0')
+        	if currentNum == nextNumber {
                 nextNumber++
-            } else {
+            } else if currentNum > nextNumber {
                 return State{}, false
             }
         }
@@ -108,11 +68,12 @@ func (s Solver) move(dir Direction, st State) (State, bool) {
     return State{X: x, Y: y, NextNumber: nextNumber, Cost: cost, Parent: &st}, true
 }
 
-func (s Solver) VisualizeState(st State) {
+func (s Solver) VisualizeState(st State) string {
+	var sb strings.Builder
 	for i := range len(s.Board) {
 		for j := range len(s.Board[0]) {
 			if j == st.X && i == st.Y {
-				fmt.Print("Z")
+				sb.WriteByte('Z')
 				continue
 			}
 
@@ -120,18 +81,19 @@ func (s Solver) VisualizeState(st State) {
 			if tile >= '0' && tile <= '9' {
 				num := int(tile - '0')
 				if num < st.NextNumber {
-					fmt.Print("*")
+					sb.WriteByte('*')
 					continue
 				}
 			}
 
-			fmt.Printf("%c", tile)
+			sb.WriteByte(tile)
 		}
-		fmt.Println()
+		sb.WriteByte('\n')
 	}
+	return sb.String()
 }
 
-func (s Solver) VisualizeRoute(st State) {
+func (s Solver) GetRoute(st State) ([]*State, []rune) {
 	states := []*State{}
 	moves := []rune{}
 
@@ -142,18 +104,18 @@ func (s Solver) VisualizeRoute(st State) {
 			dx := current.X - current.Parent.X
 			dy := current.Y - current.Parent.Y
 
-		var dir rune
-		if dx > 0 {
-			dir = 'R'
-		} else if dx < 0 {
-			dir = 'L'
-		} else if dy < 0 {
-			dir = 'U'
-		} else if dy > 0 {
-			dir = 'D'
-		} else {
-			dir = '?'
-		}
+			var dir rune
+			if dx > 0 {
+				dir = 'R'
+			} else if dx < 0 {
+				dir = 'L'
+			} else if dy < 0 {
+				dir = 'U'
+			} else if dy > 0 {
+				dir = 'D'
+			} else {
+				dir = '?'
+			}
 			moves = append(moves, dir)
 		}
 		current = current.Parent
@@ -166,15 +128,5 @@ func (s Solver) VisualizeRoute(st State) {
 		moves[i], moves[j] = moves[j], moves[i]
 	}
 
-	fmt.Printf("Solusi Yang Ditemukan : %s\n", string(moves))
-	fmt.Printf("Cost dari Solusi : %d\n", st.Cost)
-	fmt.Println("Initial")
-	s.VisualizeState(*states[0])
-	fmt.Println()
-
-	for i := 1; i < len(states); i++ {
-		fmt.Printf("Step %d : %c\n", i, moves[i-1])
-		s.VisualizeState(*states[i])
-		fmt.Println()
-	}
+	return states, moves
 }
