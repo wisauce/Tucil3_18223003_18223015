@@ -19,15 +19,15 @@ func (s Solver) isSolved(st State) bool {
 
 func (s Solver) generateNextmoves(st State) []State {
 	moves := make([]State, 0, 4)
-	for i := range 4 {
-		state, canmove := s.move(Direction(i), st)
+	for _, d := range []rune{'U', 'D', 'L', 'R'} {
+		state, canmove := s.Move(d, st)
 		if canmove {
 			moves = append(moves, state)
 		}
 	}
 	return moves
 }
-func (s Solver) move(dir Direction, st State) (State, bool) {
+func (s Solver) Move(dir rune, st State) (State, bool) {
     x, y := st.X, st.Y
     nextNumber := st.NextNumber
     cost := st.Cost
@@ -35,10 +35,10 @@ func (s Solver) move(dir Direction, st State) (State, bool) {
     for {
         nx, ny := x, y
         switch dir {
-			case UP:    ny--
-			case DOWN:  ny++
-			case LEFT:  nx--
-			case RIGHT: nx++
+			case 'U':  ny--
+			case 'D':  ny++
+			case 'L':  nx--
+			case 'R':  nx++
         }
 
         if ny < 0 || nx < 0 || ny >= len(s.Board) || nx >= len(s.Board[0]) || s.Board[ny][nx] == 'L' {
@@ -49,7 +49,7 @@ func (s Solver) move(dir Direction, st State) (State, bool) {
         }
 
         x, y = nx, ny
-        cost += s.Costs[y][x]  // ← add cost of tile we just landed on
+        cost += s.Costs[y][x]  
 
         if s.Board[y][x] >= '0' && s.Board[y][x] <= '9' {
             currentNum := int(s.Board[y][x] - '0')

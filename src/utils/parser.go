@@ -4,19 +4,13 @@ import (
 	"IceSlidingPuzzle/model"
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 	"strings"
 )
 
-func ParseFile(filename string) (model.State, model.Solver) {
-	file, err := os.Open(("../test/" + filename))
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+func ParseReader(r io.Reader) (model.State, model.Solver) {
+	scanner := bufio.NewScanner(r)
 	scanner.Scan()
 
 	nm := strings.Fields(scanner.Text())

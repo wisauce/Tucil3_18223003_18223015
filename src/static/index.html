@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ice Sliding Puzzle Solver</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .board-tile {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+        }
+        .actor-tile {
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border-radius: 4px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col font-sans">
+    <header class="bg-white border-b border-slate-200 px-6 py-4 shadow-sm flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-3">
+            <svg class="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            Ice Sliding Puzzle Solver
+        </h1>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Panel Kiri (Kontrol) -->
+        <section class="lg:col-span-4 space-y-6">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                <form id="solveForm" class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Upload Map (.txt)</label>
+                        <input type="file" id="fileInput" accept=".txt" required
+                            class="block w-full text-sm text-slate-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-lg file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-blue-50 file:text-blue-700
+                                hover:file:bg-blue-100 cursor-pointer border border-slate-200 rounded-lg p-2" />
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Algoritma</label>
+                        <select id="algorithm" class="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="ucs">Uniform Cost Search (UCS)</option>
+                            <option value="gbfs">Greedy Best-First Search (GBFS)</option>
+                            <option value="a*">A* (A-Star)</option>
+                            <option value="bfs">Breadth-First Search (BFS)</option>
+                        </select>
+                    </div>
+
+                    <div id="heuristicGroup" class="hidden">
+                        <label class="block text-sm font-medium mb-2">Heuristik</label>
+                        <select id="heuristic" class="w-full border border-slate-200 rounded-lg p-2.5 bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <option value="h1">H1: Manhattan Distance</option>
+                            <option value="h2">H2: Euclidean Distance</option>
+                            <option value="h3">H3: Chebyshev Distance</option>
+                            <option value="h4">H4: Missing Targets</option>
+                            <option value="h5">H5: Straight to Goal</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" id="solveBtn"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex justify-center items-center gap-2">
+                        <span id="btnText">Solve Puzzle</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Panel Hasil -->
+            <div id="resultPanel" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hidden">
+                <h3 class="font-bold text-lg mb-4 border-b pb-2">Metrik Penyelesaian</h3>
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between"><span class="text-slate-500">Rute:</span> <span id="resPath" class="font-mono font-medium max-w-[200px] break-all text-right"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Cost Total:</span> <span id="resCost" class="font-bold text-blue-600"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Waktu:</span> <span id="resTime" class="font-medium"></span></div>
+                    <div class="flex justify-between"><span class="text-slate-500">Iterasi:</span> <span id="resIter" class="font-medium"></span></div>
+                </div>
+                <button id="downloadBtn" class="mt-5 w-full bg-slate-800 hover:bg-slate-900 text-white py-2.5 rounded-lg text-sm font-medium transition-colors flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    <span>Download Log Solusi (.txt)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Panel Kanan (Visualisasi Map) -->
+        <section class="lg:col-span-8 flex flex-col">
+            <div class="bg-white flex-1 rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col min-h-[500px]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold">Visualisasi Papan</h2>
+                    <span id="stepCounter" class="text-sm font-medium bg-blue-100 text-blue-800 px-3 py-1 rounded-full hidden">Step 0 / 0</span>
+                </div>
+                
+                <!-- Container Map -->
+                <div class="flex-1 bg-slate-50 rounded-lg border border-slate-200 overflow-auto flex items-center justify-center p-4 relative">
+                    <p id="emptyStateMsg" class="text-slate-400">Papan permainan akan muncul di sini</p>
+                    
+                    <div id="boardContainer" class="relative hidden">
+                        <!-- Grid Background -->
+                        <div id="boardGrid" class="grid gap-1"></div>
+                        <!-- Aktor Animasi -->
+                        <div id="actor" class="actor-tile bg-blue-500 text-white shadow-md border border-blue-600">Z</div>
+                    </div>
+                </div>
+
+                <!-- Kontrol Playback -->
+                <div id="playbackControls" class="mt-6 flex flex-col gap-4 hidden">
+                    <input type="range" id="stepSlider" min="0" max="0" value="0" class="w-full accent-blue-600 cursor-pointer">
+                    <div class="flex justify-center items-center gap-4">
+                        <button id="btnPrev" class="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors" title="Mundur">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        <button id="btnPlay" class="p-3 bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full transition-colors font-bold w-12 h-12 flex items-center justify-center" title="Play/Pause">
+                            <svg id="iconPlay" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+                            <svg id="iconPause" class="w-6 h-6 hidden" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                        </button>
+                        <button id="btnNext" class="p-2 rounded-full hover:bg-slate-100 text-slate-600 transition-colors" title="Maju">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414zm6 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L14.586 10l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
