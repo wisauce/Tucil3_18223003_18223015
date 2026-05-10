@@ -25,6 +25,7 @@ Dalam permainan ini, sebuah pin/aktor (`Z`) harus meluncur di atas es licin seca
 │   └── utils/
 │       └── parser.go     <-- Parser map dari upload memori
 ├── test/                 <-- Folder contoh file input (.txt)
+├── docs/  
 └── README.md
 ```
 
